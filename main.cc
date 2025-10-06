@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 
     float Nd = 1.7e20;
     float W = 50e-6;
-    float L = 1e-4;
+    float L = 50e-6;
     float V_bi = 3.;
     float V_bias = 450.;
     float R = 50.;
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     float TPA = 1.5e-11;
     float pulse_duration = 430e-15;
     float wavelength = 400e-9;
-    float NA = 0.5;
+    float NA = 0.15;
     float refractive_index = 2.55;
     int type = 1;
     Charge_injection* injection = new Charge_injection(focus,
@@ -42,11 +42,12 @@ int main(int argc, char** argv)
     
     std::vector<float> x = injection->get_initial_pos_x();
     std::vector<float> y = injection->get_initial_pos_y();
-    std::vector<int> charges = injection->get_initial_charges();
+    std::vector<float> charges = injection->get_initial_charges();
 
-    std::cout << x.size() << std::endl;
-    std::cout << y.size() << std::endl;
-    std::cout << charges.size() << std::endl;
+    // for(size_t i = 0; i < charges.size(); ++i)
+    // {
+    //     std::cout << charges.at(i) << std::endl;
+    // }
 
     float x_min = *std::min_element(x.begin(), x.end());
     float x_max = *std::max_element(x.begin(), x.end());
@@ -60,10 +61,12 @@ int main(int argc, char** argv)
     TH2F* h2 = new TH2F("h2", "Charge distribution;X;Y;Charge", nx, x_min, x_max, ny, y_min, y_max);
 
     // Fill histogram: x, y, weight = charge
+    int counter = 0;
     for (size_t i = 0; i < x.size(); ++i) {
         for(size_t j = 0; j < y.size(); ++j)
         {
-            h2->Fill(x.at(i), y.at(j), charges.at(i+j)); // z-axis = charge
+            h2->Fill(x.at(j), y.at(i), charges.at(counter)); // z-axis = charge
+            counter++;
         }
     }
 

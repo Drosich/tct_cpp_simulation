@@ -14,7 +14,7 @@ class Charge_injection
 
         std::vector<float> get_initial_pos_x(){return _x_init;}
         std::vector<float> get_initial_pos_y(){return _y_init;}
-        std::vector<int> get_initial_charges(){return _charges_per_point_init;}
+        std::vector<float> get_initial_charges(){return _charges_per_point_init;}
 
     private:
         float _power;
@@ -30,7 +30,7 @@ class Charge_injection
 
         std::vector<float> _x_init;
         std::vector<float> _y_init;
-        std::vector<int> _charges_per_point_init;
+        std::vector<float> _charges_per_point_init;
 
         void _compute_initial_positions();
         void _compute_charges_per_point();

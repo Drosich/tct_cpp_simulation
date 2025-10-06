@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <algorithm>
 
 #define H_BAR 1.0546e-34
 
@@ -39,7 +40,7 @@ float Charge_injection::_compute_beam_width(float y)
 
 void Charge_injection::_compute_initial_positions()
 {
-    size_t N = 50;
+    size_t N = 500;
     float dx = _det->get_physical_length() / N;
     float dy = _det->get_physical_width() / N; 
     for(size_t i = 0; i < N; ++i)
@@ -55,7 +56,7 @@ void Charge_injection::_compute_initial_positions()
 void Charge_injection::_compute_charges_per_point()
 {
     // TODO YOU ARE HERE
-    size_t N =50;
+    size_t N = 500;
     float beam_width = 0.;
     float coef = 0.;
     float charge = 0.;
@@ -66,9 +67,9 @@ void Charge_injection::_compute_charges_per_point()
             beam_width = _compute_beam_width(_y_init.at(i));
             coef = std::pow(_power, 2.)*_TPA*4.*std::log(2.)*_wavelength/(_pulse_duration*H_BAR*2*M_PI*std::pow(M_PI, 5./2.)*std::pow(beam_width, 4.)*std::sqrt(std::log(4)));
             charge = -4*std::pow(_x_init.at(j), 2.)/std::pow(beam_width, 2.);
-            if(charge < -12)
+            if(charge < -10)
             {
-                _charges_per_point_init.push_back(0.);
+                _charges_per_point_init.push_back(0.1);
             }
             else
             {
@@ -76,6 +77,12 @@ void Charge_injection::_compute_charges_per_point()
             }
         }
     }
+    float max_val = *std::max_element(_charges_per_point_init.begin(), _charges_per_point_init.end());
+    if (max_val == 0.0f)
+        throw std::runtime_error("Cannot normalize when maximum is zero");
+
+    for (auto& val : _charges_per_point_init)
+        val /= (max_val/100.);
 }
 
 void Charge_injection::_create_injection()
