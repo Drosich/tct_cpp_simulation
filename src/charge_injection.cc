@@ -1,4 +1,5 @@
 #include "charge_injection.hh"
+#include "charge_carrier.hh"
 #include "detector.hh"
 
 #include <iostream>
@@ -29,7 +30,16 @@ Charge_injection::Charge_injection(float focus,
 
     _compute_initial_positions();
     _compute_charges_per_point();
+    _create_injection();
 
+}
+
+Charge_injection::~Charge_injection()
+{
+    for(size_t i = 0; i < _charges.size(); ++i)
+    {
+        delete _charges.at(i);
+    }
 }
 
 float Charge_injection::_compute_beam_width(float y)
@@ -87,5 +97,21 @@ void Charge_injection::_compute_charges_per_point()
 
 void Charge_injection::_create_injection()
 {
-    ;
+    int counter = 0;
+    for(size_t i = 0; i < _x_init.size(); ++i)
+    {
+        for(size_t j = 0; j < _y_init.size(); ++j)
+        {
+            for(int k = 0; k < static_cast<int>(_charges_per_point_init.at(counter)); ++k)
+            {
+                _charges.push_back(new Charge_carrier(_x_init.at(j), _y_init.at(i), 1));
+            }
+            counter++;
+        }
+    }
+}
+
+std::vector<Charge_carrier*> Charge_injection::get_charges()
+{
+    return _charges;
 }

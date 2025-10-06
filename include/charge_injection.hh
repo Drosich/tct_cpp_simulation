@@ -15,6 +15,7 @@ class Charge_injection
         std::vector<float> get_initial_pos_x(){return _x_init;}
         std::vector<float> get_initial_pos_y(){return _y_init;}
         std::vector<float> get_initial_charges(){return _charges_per_point_init;}
+        std::vector<Charge_carrier*> get_charges();
 
     private:
         float _power;
@@ -26,18 +27,17 @@ class Charge_injection
         float _focus;
         int _type;
         Detector* _det = nullptr;
-        std::vector<Charge_carrier*> charges;
+        std::vector<Charge_carrier*> _charges;
 
         std::vector<float> _x_init;
         std::vector<float> _y_init;
         std::vector<float> _charges_per_point_init;
-
+        
+        float _compute_beam_width(float);
         void _compute_initial_positions();
         void _compute_charges_per_point();
         void _create_injection();
-
         std::vector<float> _compute_speeds();
-        float _compute_beam_width(float);
 
         void update_positions();
         void update_speeds();
