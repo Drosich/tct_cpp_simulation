@@ -1,0 +1,9 @@
+*.swp
+build
+./*.yml
+*.py
+*.txt
+*.sif
+.vscode
+.ipynb_checkpoints
+ap-g4brachy.def
