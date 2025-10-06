@@ -2,7 +2,6 @@
 build
 ./*.yml
 *.py
-*.txt
 *.sif
 .vscode
 .ipynb_checkpoints

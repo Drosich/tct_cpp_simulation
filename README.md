@@ -8,3 +8,27 @@ to a laser providing a gaussian beam. The charges generated are then transported
 with a simple 2D transport algorithm along the electric field generated inside
 a PN junction diode. Diffusion will be also simulated.
 
+# Description
+...
+
+# How to run
+The code is compiled with CMake. You can use the CmakeLists file provided here
+as usual
+
+```bash
+$ mkdir build
+$ cmake ..
+$ make
+```
+
+An single executable file will then be created
+
+```bash
+$ ./tct_sim
+```
+
+# Dependencies
+This code uses CERN's ROOT framework for the visualization of the results. In orther for this to work ROOT has to be installed
+
+# Authors
+Diego Rosich (IFCA-CSIC-UC)
