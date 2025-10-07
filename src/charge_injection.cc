@@ -1,6 +1,7 @@
 #include "charge_injection.hh"
 #include "charge_carrier.hh"
 #include "detector.hh"
+#include "utility.hh"
 
 #include <iostream>
 #include <math.h>
@@ -31,7 +32,6 @@ Charge_injection::Charge_injection(float focus,
     _compute_initial_positions();
     _compute_charges_per_point();
     _create_injection();
-
 }
 
 Charge_injection::~Charge_injection()
@@ -75,7 +75,8 @@ void Charge_injection::_compute_charges_per_point()
         for(size_t j = 0; j < N; ++j)
         {
             beam_width = _compute_beam_width(_y_init.at(i));
-            coef = std::pow(_power, 2.)*_TPA*4.*std::log(2.)*_wavelength/(_pulse_duration*H_BAR*2*M_PI*std::pow(M_PI, 5./2.)*std::pow(beam_width, 4.)*std::sqrt(std::log(4)));
+            coef = std::pow(_power, 2.)*_TPA*4.*std::log(2.)*_wavelength / 
+            (_pulse_duration*H_BAR*2*M_PI*std::pow(M_PI, 5./2.)*std::pow(beam_width, 4.)*std::sqrt(std::log(4)));
             charge = -4*std::pow(_x_init.at(j), 2.)/std::pow(beam_width, 2.);
             if(charge < -10)
             {
@@ -92,7 +93,7 @@ void Charge_injection::_compute_charges_per_point()
         throw std::runtime_error("Cannot normalize when maximum is zero");
 
     for (auto& val : _charges_per_point_init)
-        val /= (max_val/100.);
+        val /= (max_val/10.);
 }
 
 void Charge_injection::_create_injection()
@@ -108,6 +109,37 @@ void Charge_injection::_create_injection()
             }
             counter++;
         }
+    }
+}
+
+void Charge_injection::update_speeds()
+{
+    float E = 0.;
+    float x_lim = _det->get_depleted_width();
+    if(_det->get_depleted_width() > _det->get_physical_width())
+    {
+        x_lim = _det->get_physical_width();
+    }
+    for(size_t i = 0; i < _charges.size(); ++i)
+    {
+        if(_charges.at(i)->get_position().second > x_lim || _charges.at(i)->get_position().second < 0.)
+        {
+            _charges.at(i)->set_velocity(0., 0.);
+        }
+        else
+        {
+            E = linear_field(_charges.at(i)->get_position().first, _charges.at(i)->get_position().second, _det);
+            if(_type == 0)
+            {
+                _charges.at(i)->set_velocity(0., 450e-4*1e7);
+            }
+            else
+            {
+                _charges.at(i)->set_velocity(0., 150e-4*1e7);
+            }
+            
+        }
+        
     }
 }
 

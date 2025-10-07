@@ -17,6 +17,8 @@ class Charge_injection
         std::vector<float> get_initial_charges(){return _charges_per_point_init;}
         std::vector<Charge_carrier*> get_charges();
 
+        void update_speeds();
+
     private:
         float _power;
         float _TPA;
@@ -37,10 +39,6 @@ class Charge_injection
         void _compute_initial_positions();
         void _compute_charges_per_point();
         void _create_injection();
-        std::vector<float> _compute_speeds();
-
-        void update_positions();
-        void update_speeds();
 };
 
 #endif
