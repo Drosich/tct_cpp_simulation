@@ -1,0 +1,22 @@
+{
+    "detector": {
+      "Nd": 1.7e20,
+      "width": 50e-6,
+      "length": 50e-6,
+      "V_bi": 3.0,
+      "V_bias": 450.0,
+      "R": 50.0,
+      "material": "SiC"
+    },
+    "injection": {
+      "focus": 25e-6,
+      "wavelength": 400e-9,
+      "NA": 0.15,
+      "refractive_index": 2.55
+    },
+    "simulation": {
+      "steps": 1,
+      "dt": 0.005e-9
+    }
+  }
+  

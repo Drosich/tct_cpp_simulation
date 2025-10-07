@@ -11,8 +11,8 @@ Charge_carrier::Charge_carrier(float pos_x, float pos_y, int type)
 
 void Charge_carrier::set_position(float x, float y)
 {
-    _pos_x = x;
-    _pos_y = y;
+    _pos_x += x;
+    _pos_y += y;
 }
 
 void Charge_carrier::set_velocity(float vx, float vy)

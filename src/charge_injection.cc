@@ -4,15 +4,13 @@
 #include "utility.hh"
 
 #include <iostream>
+#include <random>
 #include <math.h>
 #include <algorithm>
 
 #define H_BAR 1.0546e-34
 
 Charge_injection::Charge_injection(float focus,
-                                   float power,
-                                   float TPA, 
-                                   float pulse_duration, 
                                    float wavelength, 
                                    float numerical_aperture,
                                    float refractive_index,
@@ -20,17 +18,13 @@ Charge_injection::Charge_injection(float focus,
                                    int type)
 {
     _focus = focus;
-    _power = power;
-    _TPA = TPA;
-    _pulse_duration = pulse_duration;
     _wavelength = wavelength;
     _numerical_aperture = numerical_aperture;
     _refractive_index = refractive_index;
     _type = type;
     _det = det;
 
-    _compute_initial_positions();
-    _compute_charges_per_point();
+    _charges_per_point_init = _compute_xy_beam(10000, -32*3.66e-6, 32*3.66e-6, std::random_device{}(), 1000);
     _create_injection();
 }
 
@@ -48,67 +42,62 @@ float Charge_injection::_compute_beam_width(float y)
                      std::pow((y - _focus)*_numerical_aperture/(_refractive_index), 2.));
 }
 
-void Charge_injection::_compute_initial_positions()
+std::vector<std::pair<float, float>> Charge_injection::_compute_xy_beam(int N,
+                                                                        float y_min,
+                                                                        float y_max,
+                                                                        unsigned seed = std::random_device{}(),
+                                                                        int grid_for_max_search = 100)
 {
-    size_t N = 500;
-    float dx = _det->get_physical_length() / N;
-    float dy = _det->get_physical_width() / N; 
-    for(size_t i = 0; i < N; ++i)
-    {
-        _x_init.push_back(-_det->get_physical_length()/2 + i*dx);
-    }
-    for(size_t i = 0; i < N; ++i)
-    {
-        _y_init.push_back(i*dy);
-    }
-}
+    if (N <= 0) throw std::invalid_argument("N must be > 0");
+    if (!(y_min < y_max)) throw std::invalid_argument("y_min < y_max required");
 
-void Charge_injection::_compute_charges_per_point()
-{
-    // TODO YOU ARE HERE
-    size_t N = 500;
-    float beam_width = 0.;
-    float coef = 0.;
-    float charge = 0.;
-    for(size_t i = 0; i < N; ++i)
-    {
-        for(size_t j = 0; j < N; ++j)
-        {
-            beam_width = _compute_beam_width(_y_init.at(i));
-            coef = std::pow(_power, 2.)*_TPA*4.*std::log(2.)*_wavelength / 
-            (_pulse_duration*H_BAR*2*M_PI*std::pow(M_PI, 5./2.)*std::pow(beam_width, 4.)*std::sqrt(std::log(4)));
-            charge = -4*std::pow(_x_init.at(j), 2.)/std::pow(beam_width, 2.);
-            if(charge < -10)
-            {
-                _charges_per_point_init.push_back(0.1);
-            }
-            else
-            {
-                _charges_per_point_init.push_back(coef*std::exp(charge));
-            }
+    // RNGs
+    std::mt19937_64 gen(seed);
+    std::uniform_real_distribution<float> unif_y(y_min, y_max);
+    std::uniform_real_distribution<float> unif01(0.0, 1.0);
+
+    // 1) Find min_w on [y_min,y_max] to compute upper bound of p(y) = 1/w(y).
+    //    p(y) ∝ 1/w(y) so max_p = 1/min_w.
+    float min_w = std::numeric_limits<float>::infinity();
+    for (int i = 0; i < grid_for_max_search; ++i) {
+        float frac = (float)i / (grid_for_max_search - 1);
+        float y = y_min + frac * (y_max - y_min);
+        float w = _compute_beam_width(y);
+        if (!(w > 0.0)) throw std::runtime_error("w_of_y must return positive values");
+        if (w < min_w) min_w = w;
+    }
+    if (!std::isfinite(min_w) || min_w <= 0.0) throw std::runtime_error("could not determine min w");
+
+    float max_py = 1.0 / min_w; // p(y) ∝ 1/w(y), so max over interval ≤ 1/min_w
+
+    std::vector<std::pair<float,float>> samples;
+    samples.reserve(N);
+
+    // Rejection sampling for y, then sample x | y
+    while ((int)samples.size() < N) {
+        float y = unif_y(gen);
+        float w = _compute_beam_width(y);
+        float py = 1.0 / w;               // unnormalized p(y)
+        float u = unif01(gen) * max_py;   // sample in [0, max_py)
+        if (u <= py) {
+            // accept y
+            float sigma = w / std::sqrt(2.0); // stddev for x
+            // Normal distribution for x
+            std::normal_distribution<float> gauss_x(0.0, sigma);
+            float x = gauss_x(gen);
+            samples.emplace_back(x, y);
         }
+        // else: reject and try again
     }
-    float max_val = *std::max_element(_charges_per_point_init.begin(), _charges_per_point_init.end());
-    if (max_val == 0.0f)
-        throw std::runtime_error("Cannot normalize when maximum is zero");
 
-    for (auto& val : _charges_per_point_init)
-        val /= (max_val/10.);
+    return samples;
 }
 
 void Charge_injection::_create_injection()
 {
-    int counter = 0;
-    for(size_t i = 0; i < _x_init.size(); ++i)
+    for(size_t i = 0; i < _charges_per_point_init.size(); ++i)
     {
-        for(size_t j = 0; j < _y_init.size(); ++j)
-        {
-            for(int k = 0; k < static_cast<int>(_charges_per_point_init.at(counter)); ++k)
-            {
-                _charges.push_back(new Charge_carrier(_x_init.at(j), _y_init.at(i), 1));
-            }
-            counter++;
-        }
+        _charges.push_back(new Charge_carrier(_charges_per_point_init.at(i).first, _charges_per_point_init.at(i).second, _type));
     }
 }
 

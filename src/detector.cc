@@ -38,18 +38,18 @@ void Detector::_initialize_material()
     if(_material == "SiC")
     {
         _eps = 9.72;
-        _e_diffusion_constant = 3.4e-4;
-        _h_diffusion_constant = 6.e-7;
-        _e_lifetime = 3.4e-4;
+        _e_diffusion_constant = 22.e-4;
+        _h_diffusion_constant = 3.e-4;
+        _e_lifetime = 1.e-9;
         _h_lifetime = 6.e-7;
     }
     else
     {
         std::cout << "Detector::_find_eps: error: unrecognised material. Defaulting to SiC" << std::endl;
         _eps = 9.72;
-        _e_diffusion_constant = 3.4e-4;
-        _h_diffusion_constant = 6.e-7;
-        _e_lifetime = 3.4e-4;
+        _e_diffusion_constant = 22.e-4;
+        _h_diffusion_constant = 3.e-4;
+        _e_lifetime = 1.e-9;
         _h_lifetime = 6.e-7;
     }
 }

@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # This assumes you have sourced ROOT’s environment:
 #   source /path/to/root/bin/thisroot.sh
 find_package(ROOT REQUIRED COMPONENTS RIO Net Hist Graf Graf3d Gpad)
+find_package(nlohmann_json REQUIRED)
 include(${ROOT_USE_FILE})
 # Add include directory
 include_directories(include
@@ -25,7 +26,7 @@ add_executable(${PROJECT_NAME}
 )
 
 # --- Link against ROOT libraries ---
-target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES} nlohmann_json::nlohmann_json)
 
 # Optional: extra warnings (for GCC/Clang)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
