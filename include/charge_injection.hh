@@ -1,11 +1,19 @@
 #ifndef _CHARGEINJECTION_HH_
 #define _CHARGEINJECTION_HH_
 
-class Charge_carrier;
-class Detector;
+/**
+ * @class Charge_injection
+ * @author D. Rosich
+ * 
+ * Class representing a charge carrier cloud injected by a laser with a gaussian
+ * beam profile
+ */
 
 #include <vector>
 #include <utility>
+
+class Charge_carrier;
+class Detector;
 
 class Charge_injection
 {

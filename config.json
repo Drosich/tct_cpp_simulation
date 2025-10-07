@@ -11,11 +11,11 @@
     "injection": {
       "focus": 25e-6,
       "wavelength": 400e-9,
-      "NA": 0.15,
+      "NA": 1.5,
       "refractive_index": 2.55
     },
     "simulation": {
-      "steps": 1,
+      "steps": 100,
       "dt": 0.005e-9
     }
   }

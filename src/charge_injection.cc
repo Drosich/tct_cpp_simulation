@@ -8,8 +8,22 @@
 #include <math.h>
 #include <algorithm>
 
-#define H_BAR 1.0546e-34
+#define H_BAR 1.0546e-34 // planck constant over 2pi
 
+/**
+ * @brief class constructor
+ * 
+ * class constructor. Initializes the initial position of the charges and fills
+ * the charge carrier array.
+ * Bear in mind: the values should be inputed in the correct units (SI)
+ * 
+ * @param focus depth at which the laser is focused (m)
+ * @param wavelength laser wavelength (m)
+ * @param numerical_aperture laser numerical aperture
+ * @param refractive_index detector material refractive index
+ * @param det detector geometry
+ * @param type type of the carriers. 0->electrons, 1->holes
+ */
 Charge_injection::Charge_injection(float focus,
                                    float wavelength, 
                                    float numerical_aperture,
@@ -24,6 +38,7 @@ Charge_injection::Charge_injection(float focus,
     _type = type;
     _det = det;
 
+    // this is hardcoded
     _charges_per_point_init = _compute_xy_beam(10000, -32*3.66e-6, 32*3.66e-6, std::random_device{}(), 1000);
     _create_injection();
 }

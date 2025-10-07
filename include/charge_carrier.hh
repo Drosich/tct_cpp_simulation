@@ -1,6 +1,14 @@
 #ifndef _CHARGECARRIER_HH_
 #define _CHARGECARRIER_HH_
 
+/**
+ * @class Charge_carrier
+ * @author D. Rosich
+ * 
+ * Class representing a charge carrier inside a semiconductor. Holds position,
+ * drift velocity and type (electron or hole)
+*/
+
 #include <utility>
 
 class Charge_carrier
