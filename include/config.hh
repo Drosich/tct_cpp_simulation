@@ -1,6 +1,13 @@
 #ifndef _CONFIG_HH_
 #define _CONFIG_HH_
 
+/**
+ * @class Config
+ * @author D. Rosich
+ * 
+ * json reader. Loads the configuration file passed by the user
+ */
+
 #include <string>
 #include <nlohmann/json.hpp>
 
@@ -24,10 +31,13 @@ public:
     float get_NA() const;
     float get_refractive_index() const;
     int get_type() const;
+    int get_N() const;
 
     // Simulation
     int get_steps() const;
     float get_dt() const;
+    float get_t_pc() const;
+    std::string get_sim_type() const;
 
 private:
     nlohmann::json _data;

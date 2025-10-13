@@ -5,42 +5,46 @@
  * @class Charge_injection
  * @author D. Rosich
  * 
- * Class representing a charge carrier cloud injected by a laser with a gaussian
- * beam profile
+ * Handles the injection of charge carriers into a detector. Stores and manages 
+ * electrons or holes as Charge_carrier objects.
  */
 
+#include "charge_carrier.hh"
+#include "detector.hh"
 #include <vector>
+#include <random>
 #include <utility>
-
-class Charge_carrier;
-class Detector;
+#include <filesystem>
 
 class Charge_injection
 {
     public:
-        Charge_injection(float, float, float, float, Detector*, int);
-        ~Charge_injection();
+        Charge_injection(float, float, float, float, Detector*, int, int);
+        ~Charge_injection() = default;
 
-        std::vector<std::pair<float, float>> get_initial_charges(){return _charges_per_point_init;}
-        std::vector<Charge_carrier*> get_charges();
-
+        void set_type(int);
         void update_speeds();
 
+        std::vector<Charge_carrier>& get_charges();
+
     private:
+        int _type;
+        int _n_of_charges;
+        float _focus;
         float _wavelength;
         float _numerical_aperture;
         float _refractive_index;
-        float _focus;
-        int _type;
-        Detector* _det = nullptr;
-        std::vector<Charge_carrier*> _charges;
+        Detector* _det;
 
-        std::vector<float> _x_init;
-        std::vector<float> _y_init;
-        std::vector<std::pair<float,float>> _charges_per_point_init;
-        
+        std::vector<Charge_carrier> _charges;
+        std::vector<std::pair<float, float>> _charges_per_point_init;
+
+        std::vector<float> _E_field_experimental_range;
+        std::vector<float> _velocity_exp;
+
         float _compute_beam_width(float);
-        std::vector<std::pair<float, float>> _compute_xy_beam(int, float, float, unsigned, int);
+        std::vector<std::pair<float, float>> _compute_xy_beam(int, float, float, unsigned seed = std::random_device{}(),
+                                                            int grid_for_max_search = 2000);
         void _create_injection();
 };
 

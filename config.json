@@ -9,14 +9,17 @@
       "material": "SiC"
     },
     "injection": {
-      "focus": 25e-6,
-      "wavelength": 400e-9,
-      "NA": 1.5,
-      "refractive_index": 2.55
+      "focus": 47e-6,
+      "wavelength": 800e-9,
+      "NA": 0.4,
+      "refractive_index": 2.55,
+      "N": 10000
     },
     "simulation": {
-      "steps": 100,
-      "dt": 0.005e-9
+      "steps": 1000,
+      "dt": 0.005e-9,
+      "t_pc": 0.25e-9,
+      "type": "z_scan"
     }
   }
   
