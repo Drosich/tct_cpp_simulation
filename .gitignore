@@ -1,7 +1,6 @@
 *.swp
 build
 ./*.yml
-*.py
 *.sif
 .vscode
 .ipynb_checkpoints
