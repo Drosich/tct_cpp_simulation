@@ -187,15 +187,6 @@ void Charge_injection::update_speeds()
         {
             E = linear_field(pos.first, pos.second, _det);
             v = linear_interpolation(E/1e8, _E_field_experimental_range, _velocity_exp)*1e-2;
-            // if(_type == 0)
-            // {
-            //     v = 450e-4*E;
-            // }
-            // else
-            // {
-            //     v = 300e-4*E;
-            // }
-            
             charge.set_velocity(0., v);
         }
     }

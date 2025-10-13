@@ -16,6 +16,8 @@
 #include <TAxis.h>
 #include <TSystem.h>
 #include <TH2F.h>
+#include <TMultiGraph.h>
+#include <TLegend.h>
 
 #define QE 1.602e-19
 
@@ -143,6 +145,14 @@ int main(int argc, char** argv)
         std::vector<float> int_charge_t;
         std::vector<float> WPC;
 
+        TCanvas* c_pulses = new TCanvas("c_pulses", "Signal pulses at each z", 1000, 600);
+        c_pulses->cd();
+        TMultiGraph* mg = new TMultiGraph();
+        TLegend* leg = new TLegend(0.75, 0.7, 0.95, 0.9);
+
+        float z_min = z_array.front();
+        float z_max = z_array.back();
+
         for(auto z : z_array)
         {
             std::cout << "=== SIMULATING z = " << z/1.e-6 << std::endl;
@@ -156,18 +166,10 @@ int main(int argc, char** argv)
                                          cfg.get_N());
             Charge_injection injection_h = injection_e;
             injection_h.set_type(1);
-
-            auto &ce = injection_e.get_charges();
-            auto &ch = injection_h.get_charges();
-            size_t inside_e = 0, inside_h = 0;
-            float y_min = 0.0f;
-            float y_max = std::min(det.get_depleted_width(), det.get_physical_width());
-            for (auto &p : ce) if (p.get_position().second >= y_min && p.get_position().second <= y_max) ++inside_e;
-            for (auto &p : ch) if (p.get_position().second >= y_min && p.get_position().second <= y_max) ++inside_h;
-            std::cerr << "z="<<z<<" injected_e inside="<<inside_e<<"/"<<ce.size()
-                    <<" injected_h inside="<<inside_h<<"/"<<ch.size()
-                    <<" y_range=["<<y_min<<","<<y_max<<"]\n";
             
+            signal_e.clear();
+            signal_h.clear();
+            signal_total.clear();
             for(int step = 0; step < cfg.get_steps(); ++step)
             {
                 injection_e.update_speeds();
@@ -178,10 +180,10 @@ int main(int argc, char** argv)
 
                 for(size_t j = 0; j < charges_e.size(); ++j)
                 {
-                    auto vel_e = charges_e[j].get_velocity();
+                    auto vel_e = injection_e.get_charges()[j].get_velocity();
                     charges_e[j].set_position(cfg.get_dt()*vel_e.first, cfg.get_dt()*vel_e.second);
 
-                    auto vel_h = charges_h[j].get_velocity();
+                    auto vel_h = injection_h.get_charges()[j].get_velocity();
                     charges_h[j].set_position(-cfg.get_dt()*vel_h.first, -cfg.get_dt()*vel_h.second);
                 }
 
@@ -189,8 +191,8 @@ int main(int argc, char** argv)
                 float sum_h = 0.;
                 for(size_t j = 0; j < charges_e.size(); j++)
                 {
-                    sum_e += charges_e[j].get_velocity().second;
-                    sum_h += charges_h[j].get_velocity().second;
+                    sum_e += injection_e.get_charges()[j].get_velocity().second;
+                    sum_h += injection_h.get_charges()[j].get_velocity().second;
                 }
 
                 signal_e[step] = sum_e * QE / x_lim;
@@ -209,9 +211,25 @@ int main(int argc, char** argv)
             int_charge_h.push_back(Q_h);
             int_charge_t.push_back(Q_t);
             WPC.push_back(WPC_val);
+
+            float norm = (z - z_min) / (z_max - z_min); // normalized 0→1
+            int color = TColor::GetColorPalette(norm * 255); // pick from ROOT palette
+
+            TGraph* pulse = new TGraph(t.size(), t.data(), signal_total.data());
+            pulse->SetLineColor(color);
+            pulse->SetLineWidth(1);
+            mg->Add(pulse, "L");
+
+            TString label = Form("z = %.1f µm", z * 1e6);
+            leg->AddEntry(pulse, label, "l");
         }
 
         std::cout << "END" << std::endl;
+
+        mg->SetTitle("Signal pulses vs time for different z;Time [s];Signal [A]");
+        mg->Draw("AL");
+        leg->Draw();
+        c_pulses->Update();
 
         TCanvas* c = new TCanvas("c", "Z-Scan", 800, 600);
         c->cd();

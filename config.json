@@ -13,7 +13,7 @@
       "wavelength": 800e-9,
       "NA": 0.4,
       "refractive_index": 2.55,
-      "N": 10000
+      "N": 100000
     },
     "simulation": {
       "steps": 1000,

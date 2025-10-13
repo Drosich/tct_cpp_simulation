@@ -7,6 +7,8 @@ This simply simulates a 2D charge injection into a semiconductor corresponding
 to a laser providing a gaussian beam. The charges generated are then transported
 with a simple 2D transport algorithm along the electric field generated inside
 a PN junction diode. Diffusion will be also simulated.
+Inside folder `optical_sim` there are python scripts which simulate the 
+propagation of the laser beam used in the experiments
 
 # Description
 ...
@@ -28,7 +30,11 @@ $ ./tct_sim
 ```
 
 # Dependencies
-This code uses CERN's ROOT framework for the visualization of the results. In orther for this to work ROOT has to be installed
+This code uses CERN's ROOT framework for the visualization of the results. In 
+order for this to work ROOT has to be installed. 
+
+For the diffractive optics simulation, [diffractio](https://diffractio.readthedocs.io/en/latest/) is used.
+It can be installed with pip.
 
 # Authors
 Diego Rosich (IFCA-CSIC-UC)
