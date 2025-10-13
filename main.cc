@@ -133,6 +133,15 @@ int main(int argc, char** argv)
         gr_pulse_total->Draw("APL");
         gr_pulse_e->Draw("PL SAME");
         gr_pulse_h->Draw("PL SAME");
+
+        
+        float Q_e = gr_pulse_e->Integral();
+        float Q_h = gr_pulse_h->Integral();
+        float Q_t = gr_pulse_total->Integral();
+
+        std::cout << "Charge e = " << Q_e << std::endl;
+        std::cout << "Charge h = " << Q_h << std::endl;
+        std::cout << "Charge total = " << Q_t << std::endl;
     }
     else if(cfg.get_sim_type() == "z_scan")
     {
@@ -203,9 +212,16 @@ int main(int argc, char** argv)
             TGraph graph_e(t.size(), t.data(), signal_e.data());
             TGraph graph_h(t.size(), t.data(), signal_h.data());
             TGraph graph_t(t.size(), t.data(), signal_total.data());
-            float Q_e = graph_e.Integral();
-            float Q_h = graph_h.Integral();
-            float Q_t = graph_t.Integral();
+            float Q_e = 0.0;
+            float Q_h = 0.0;
+            float Q_t = 0.0;
+
+            for (int i=1;i<steps;++i)
+            {
+                Q_e += 0.5*(double(signal_e[i])+double(signal_e[i-1]))*dt;
+                Q_h += 0.5*(double(signal_h[i])+double(signal_h[i-1]))*dt;
+                Q_t += 0.5*(double(signal_total[i])+double(signal_total[i-1]))*dt;
+            }
             float WPC_val = linear_interpolation(cfg.get_t_pc(), t, signal_total);
             int_charge_e.push_back(Q_e);
             int_charge_h.push_back(Q_h);
