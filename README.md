@@ -30,11 +30,13 @@ $ ./tct_sim
 ```
 
 # Dependencies
-This code uses CERN's ROOT framework for the visualization of the results. In 
-order for this to work ROOT has to be installed. 
+This code uses [CERN's ROOT framework](https://root.cern/) for the visualization
+of the results.
 
 For the diffractive optics simulation, [diffractio](https://diffractio.readthedocs.io/en/latest/) is used.
 It can be installed with pip.
+
+[nlohmann/json](https://json.nlohmann.me/) for the parsing of the input file
 
 # Authors
 Diego Rosich (IFCA-CSIC-UC)

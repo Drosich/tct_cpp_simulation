@@ -42,10 +42,13 @@ int main(int argc, char** argv)
 
     int steps = cfg.get_steps();
     float dt = cfg.get_dt();
+    float R = det.get_resistance();
+    float C = 1.6111e-12;
     std::vector<float> t(steps);
     std::vector<float> signal_e(steps, 0.0f);
     std::vector<float> signal_h(steps, 0.0f);
     std::vector<float> signal_total(steps, 0.0f);
+    std::vector<float> filtered_pulse;
     for(int i = 0; i < steps; ++i) t[i] = i * dt;
     float x_lim = (det.get_depleted_width() > det.get_physical_width()) ? det.get_physical_width() : det.get_depleted_width();
 
@@ -122,6 +125,20 @@ int main(int argc, char** argv)
             gSystem->ProcessEvents();
             gSystem->Sleep(30);
         }
+
+        if(R > 0)
+        {
+            float alpha = dt / (R*C + dt);
+            filtered_pulse.push_back(alpha * signal_total[0]);
+            for (size_t i = 1; i < signal_total.size(); ++i) 
+            {
+                filtered_pulse.push_back(alpha * signal_total.at(i) + (1 - alpha) * filtered_pulse[i - 1]);
+            }
+        }
+        else
+        {
+            filtered_pulse = signal_e;
+        }
         TCanvas* c_pulse = new TCanvas("c_pulse", "pulse", 800, 600);
         c_pulse->cd();
         TGraph* gr_pulse_e = new TGraph(t.size(), t.data(), signal_e.data());
@@ -130,18 +147,18 @@ int main(int argc, char** argv)
         gr_pulse_h->SetLineColor(kRed);
         TGraph* gr_pulse_total = new TGraph(t.size(), t.data(), signal_total.data());
         gr_pulse_total->SetLineColor(kBlack);
+        gr_pulse_total->GetXaxis()->SetRangeUser(0, 10e-9);
         gr_pulse_total->Draw("APL");
-        gr_pulse_e->Draw("PL SAME");
-        gr_pulse_h->Draw("PL SAME");
-
+        gr_pulse_e->Draw("PL");
+        gr_pulse_h->Draw("PL");
+        // gr_pulse_filtered->Draw("PL SAME");
+        // float Q_t = 0.0;
+        // for (int i=1;i<steps;++i)
+        // {
+        //     Q_t += 0.5*(float(filtered_pulse[i])+float(filtered_pulse[i-1]))*dt;
+        // }
+        // std::cout << Q_t << std::endl;
         
-        float Q_e = gr_pulse_e->Integral();
-        float Q_h = gr_pulse_h->Integral();
-        float Q_t = gr_pulse_total->Integral();
-
-        std::cout << "Charge e = " << Q_e << std::endl;
-        std::cout << "Charge h = " << Q_h << std::endl;
-        std::cout << "Charge total = " << Q_t << std::endl;
     }
     else if(cfg.get_sim_type() == "z_scan")
     {
@@ -153,14 +170,6 @@ int main(int argc, char** argv)
         std::vector<float> int_charge_h;
         std::vector<float> int_charge_t;
         std::vector<float> WPC;
-
-        TCanvas* c_pulses = new TCanvas("c_pulses", "Signal pulses at each z", 1000, 600);
-        c_pulses->cd();
-        TMultiGraph* mg = new TMultiGraph();
-        TLegend* leg = new TLegend(0.75, 0.7, 0.95, 0.9);
-
-        float z_min = z_array.front();
-        float z_max = z_array.back();
 
         for(auto z : z_array)
         {
@@ -176,9 +185,10 @@ int main(int argc, char** argv)
             Charge_injection injection_h = injection_e;
             injection_h.set_type(1);
             
-            signal_e.clear();
-            signal_h.clear();
-            signal_total.clear();
+            signal_e.resize(steps, 0.0f);
+            signal_h.resize(steps, 0.0f);
+            signal_total.resize(steps, 0.0f);
+            filtered_pulse.clear();
             for(int step = 0; step < cfg.get_steps(); ++step)
             {
                 injection_e.update_speeds();
@@ -209,56 +219,34 @@ int main(int argc, char** argv)
                 signal_total[step] = (signal_e[step] + signal_h[step]);
             }
 
-            TGraph graph_e(t.size(), t.data(), signal_e.data());
-            TGraph graph_h(t.size(), t.data(), signal_h.data());
-            TGraph graph_t(t.size(), t.data(), signal_total.data());
-            float Q_e = 0.0;
-            float Q_h = 0.0;
-            float Q_t = 0.0;
-
-            for (int i=1;i<steps;++i)
+            if(R > 0)
             {
-                Q_e += 0.5*(double(signal_e[i])+double(signal_e[i-1]))*dt;
-                Q_h += 0.5*(double(signal_h[i])+double(signal_h[i-1]))*dt;
-                Q_t += 0.5*(double(signal_total[i])+double(signal_total[i-1]))*dt;
+                float alpha = dt / (R*C + dt);
+                filtered_pulse.resize(signal_total.size());
+                filtered_pulse[0] = alpha * signal_total[0];
+                for (size_t i = 1; i < signal_total.size(); ++i) 
+                    filtered_pulse[i] = alpha * signal_total[i] + (1 - alpha) * filtered_pulse[i - 1];
             }
-            float WPC_val = linear_interpolation(cfg.get_t_pc(), t, signal_total);
-            int_charge_e.push_back(Q_e);
-            int_charge_h.push_back(Q_h);
+
+            float Q_t = 0.0;
+            for (int i = 1;i < steps; ++i)
+            {
+                Q_t += 0.5*(float(signal_total[i])+float(signal_total[i-1]))*dt;
+            }
+            float WPC_val = linear_interpolation(cfg.get_t_pc(), t, filtered_pulse);
             int_charge_t.push_back(Q_t);
             WPC.push_back(WPC_val);
-
-            float norm = (z - z_min) / (z_max - z_min); // normalized 0→1
-            int color = TColor::GetColorPalette(norm * 255); // pick from ROOT palette
-
-            TGraph* pulse = new TGraph(t.size(), t.data(), signal_total.data());
-            pulse->SetLineColor(color);
-            pulse->SetLineWidth(1);
-            mg->Add(pulse, "L");
-
-            TString label = Form("z = %.1f µm", z * 1e6);
-            leg->AddEntry(pulse, label, "l");
         }
 
-        std::cout << "END" << std::endl;
-
-        mg->SetTitle("Signal pulses vs time for different z;Time [s];Signal [A]");
-        mg->Draw("AL");
-        leg->Draw();
-        c_pulses->Update();
+        float max = *std::max_element(int_charge_t.begin(), int_charge_t.end());
+        for (size_t i=0; i<int_charge_t.size(); ++i) int_charge_t[i] /= max;
 
         TCanvas* c = new TCanvas("c", "Z-Scan", 800, 600);
         c->cd();
-        TGraph* z_scan_e = new TGraph(int_charge_e.size(), z_array.data(), int_charge_e.data());
-        z_scan_e->SetLineColor(kBlue);
-        TGraph* z_scan_h = new TGraph(int_charge_h.size(), z_array.data(), int_charge_h.data());
-        z_scan_h->SetLineColor(kRed);
         TGraph* z_scan_t = new TGraph(int_charge_t.size(), z_array.data(), int_charge_t.data());
         z_scan_t->SetLineColor(kBlack);
-        z_scan_e->SetTitle("z-scan;z [um];Charge [a.u.]");
+        z_scan_t->SetTitle("z-scan;z [um];Charge [a.u.]");
         z_scan_t->Draw("APL");
-        z_scan_e->Draw("PL SAME");
-        z_scan_h->Draw("PL SAME");
         c->Update();
 
         TCanvas* c2 = new TCanvas("c2", "WPC", 800, 600);

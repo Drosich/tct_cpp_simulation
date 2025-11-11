@@ -14,7 +14,8 @@ find_package(nlohmann_json REQUIRED)
 include(${ROOT_USE_FILE})
 # Add include directory
 include_directories(include
-                    ${ROOT_INCLUDE_DIRS})
+                    ${ROOT_INCLUDE_DIRS}
+                    /usr/include)
 
 # Collect all source files from src/
 file(GLOB_RECURSE SRC_FILES src/*.cc)
@@ -27,6 +28,8 @@ add_executable(${PROJECT_NAME}
 
 # --- Link against ROOT libraries ---
 target_link_libraries(${PROJECT_NAME} PUBLIC ${ROOT_LIBRARIES} nlohmann_json::nlohmann_json)
+target_include_directories(${PROJECT_NAME} PUBLIC ${ROOT_INCLUDE_DIRS} ${CMAKE_SOURCE_DIR}/include /usr/include)
+
 
 # Optional: extra warnings (for GCC/Clang)
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

@@ -41,7 +41,7 @@ Charge_injection::Charge_injection(float focus,
     _det = det;
     _n_of_charges = N;
 
-    _charges_per_point_init = _compute_xy_beam(_n_of_charges, -100.e-6, 100.e-6, std::random_device{}(), 200000);
+    _charges_per_point_init = _compute_xy_beam(_n_of_charges, -64.e-6, 64.e-6, std::random_device{}(), 200000);
     _create_injection();
     std::cout << "Simulating " << _charges.size() << " charges" << std::endl;
 
@@ -186,7 +186,15 @@ void Charge_injection::update_speeds()
         else
         {
             E = linear_field(pos.first, pos.second, _det);
-            v = linear_interpolation(E/1e8, _E_field_experimental_range, _velocity_exp)*1e-2;
+            // v = linear_interpolation(E/1e8, _E_field_experimental_range, _velocity_exp)*1e-2;
+            if(_type == 0)
+            {
+                v = 450e-4*1e6;
+            }
+            else
+            {
+                v = 90e-4*1e6;
+            }
             charge.set_velocity(0., v);
         }
     }
