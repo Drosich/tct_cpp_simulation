@@ -16,7 +16,7 @@
       "N": 10000
     },
     "simulation": {
-      "steps": 1000,
+      "steps": 500,
       "dt": 0.0025e-9,
       "t_pc": 0.25e-9,
       "type": "z_scan"
